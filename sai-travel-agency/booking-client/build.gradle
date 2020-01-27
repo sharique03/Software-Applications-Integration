@@ -1,0 +1,47 @@
+plugins {
+    id 'org.openjfx.javafxplugin' version '0.0.7'
+    id 'application'
+}
+
+javafx {
+    modules = [ 'javafx.controls', 'javafx.fxml' ]
+}
+
+application {
+    mainClassName = 'booking.client.gui.ClientMain'
+}
+
+dependencies {
+    compile project(":message")
+
+}
+
+jar {
+    archiveFileName = 'clientModel.jar' // name of the generated .jar file
+
+    manifest {    // class where the main method is
+        attributes 'Main-Class': mainClassName
+    }
+    // add all dependencies to the executable .jar file
+    from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
+}
+ext {
+    modelPackage = 'booking/client/model/*' // package from which the .jar file will be created
+    modelJarName = "clientModel.jar"   // name of the .jar file
+    modelSourcePath = "${buildDir}/libs/"+modelJarName  // absolute path of created .jar file
+    //modelSourcePath = "${buildDir}/lib/"+modelJarName  // absolute path of created .jar file
+    modelDestPath = "${rootProject.projectDir}/broker/lib/" // path of the LIB folder in broker application
+}
+
+task createModelJar(type: Jar, dependsOn: compileJava) {
+    archiveFileName =  modelJarName
+    from sourceSets.main.output
+    include modelPackage
+    print 'created ' + modelSourcePath + ' with classes from ' + modelPackage
+}
+
+task copyModelJarToBroker(type: Copy,dependsOn:[createModelJar]) {
+    from modelSourcePath
+    into modelDestPath
+    print 'copied '+ modelSourcePath + ' into ' + modelDestPath
+}
